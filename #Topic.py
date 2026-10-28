@@ -15,19 +15,19 @@ class PubNode(Node):
         msg.data = 'hello'
         self.pub.publish(msg)
 
- def main (args=None):
+def main (args=None):
     rclpy.init(args=args)
     node = PubNode("pub_node")
     rclpy.spin(node)
     rclpy.shutdown()
 
  #sub modle   
- import rclpy
+import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
 
 class SubNode(Node):
-    def _init_(self,name)
+    def _init_(self,name):
         super()._init_(name)
         self.sub=self.create_subscription(String,'chatter',self.listener_callback,10)
 
