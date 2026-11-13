@@ -1,0 +1,112 @@
+Launch进阶能力：
+传参数：在 Node 里加 parameters=[{'参数名': 值}]。
+Node(
+    package='pkg', 
+    executable='node',
+    parameters=[{'robot_name': '小明'}, {'speed': 2.0}]
+)
+加配置：在 Node 里加 arguments=['-d', '文件路径']。
+Node(
+    package='rviz2', 
+    executable='rviz2',
+    arguments=['-d', '/绝对路径/配置.rviz']
+)
+一句话：“把终端里的长命令，提前变成一份写好的快捷菜单。（一启动就能用）
+	重命名：为了同时启动两个一样摄像头节点
+在Node里加name=‘你起的名字’
+Node(
+    package='my_camera', 
+    executable='camera_node',
+    name='camera_left'  强行给它改名叫“左眼”
+),
+Node(
+    package='my_camera', 
+    executable='camera_node',
+    name='camera_right' 强行给它改名叫“右眼”
+)
+	资源重映射：为了用别人的代码
+在node里加remappings=[(‘旧’,‘新’)]
+Node(
+    package='别人的包', 
+    executable='别人的程序',
+    # 看这里！把别人的名字，映射成我的名字
+remappings=[('/turtle1/cmd_vel', '/my_robot/cmd_vel')] 
+)
+remappings=[('别人代码名, '自己机器名')]
+
+cmd_vel:command velocity(速度指令)，包括线速度linear和角速度angular
+		线速度：前后，正数是前进，负数是后退   角速度：转圈，正数是左转
+		linear.x = 1.0，angular.z = 0.0
+		
+Argument
+定义：是个“临时参数”，存在于launch当中，当启动launch时就赋值给parameters（ros2节点中的真实参数），给节点使用
+怎么用：
+Step1：挖坑（定义 argument）：
+from launch.actions import DeclareLaunchArgument（声明启动的临时参数）
+#launch文件里声明一个 argument 定义一个叫 my_speed 的坑，默认值是 0
+speed_arg = DeclareLaunchArgument(
+    'my_speed', 
+    default_value='0' 
+)
+
+Step2：放进清单（存入 LaunchDescription启动描述）：
+return LaunchDescription([
+    speed_arg,  #  登记刚才挖的坑
+    Node( ... ) # 登记要启动的节点
+])
+#启动清单里面装要启动的节点和临时的参数
+
+Step3：填坑（用吸管把值吸出来，喂给节点LaunchConfiguration 启动配置 parameter）：
+Node(
+    package='my_robot',
+    executable='my_node',
+    parameters=[{
+        # 把外面传进来的 argument，变成节点的 parameter
+        'speed': LaunchConfiguration('my_speed') 
+    }]
+)
+
+最终：在终端跑起来：
+ros2 launch learning_launch parameters.launch.py background_r:=255
+注意那个 := 符号，意思就是把这个 argument 的值临时改成 255）
+
+参数多的时候用 parameters=[yaml文件路径]
+ 
+
+Rviz:指机器人的“透视眼”，把数据变成3D给人看
+ros2 run rviz2 rviz2 -d 配置文件路径
+ros2 run rviz2 rviz2 ：启动rviz文件
+-d：加载指定配置文件
+
+文件路径：os.path.join
+get_package_share_directory：获取功能包共享目录（绝对路径）
+是python里拼接文件路径的工具
+os.path.join(文件夹1，文件夹2，文件名)
+可以避免少打斜杠
+例子：
+rviz_config = os.path.join(
+    get_package_share_directory('learning_launch'), # 第一部分：包的绝对路径
+    'rviz',                                         # 第二部分：文件夹名
+    'turtle_rviz.rviz'                              # 第三部分：文件名
+)
+
+Launch文件相互包含：
+IncludeLaunchDescription：包含启动描述，用于把另外一个写好的launch文件拉进当前文件一起启动
+PythonLaunchDescriptionSource： Python格式启动清单的来源
+GroupAction：建一个大组，把启动动作打包
+PushRosNamespace：加ros命名空间，贴标签（避免与别人的话题名冲突）
+ 
+
+改setup.py打包配置文件
+1.	data_files：把 launch、config、rviz 等配置文件夹登记进去
+(目的地, glob(你要搬的东西))glob是扫描工具，把找到的文件列成清单
+(os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*.launch.py')))
+意思是把launch 文件夹里，把所有以 .launch.py 结尾的文件，复制到 install 的对应目录里去
+2.entry_points：把写好的 .py 节点注册成终端命令。
+'我的节点命令 = 你的包名.节点文件名:main',
+ 
+
+编译：.回到你的工作空间（dev_ws）
+colcon build
+source install/setup.bash
+ros2 launch 你的包名 文件名.launch.py

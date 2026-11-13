@@ -13,3 +13,7 @@ ros2 run learning_topic topic_helloworld_pub
 踩过的坑：
 1，发布者用了 best_effort，订阅者用了 reliable。这俩不匹配系统就直接静默断连了，用 ros2 topic info --verbose 。
 2，参数动态修改：本来以为改参数得重启节点，试了一下在终端敲 ros2 param set，节点没重启，颜色阈值直接就变了，
+
+详细学习笔记
+- [TF2 坐标变换与跟随笔记](./TF2_Notes.md)
+- [Launch 多节点启动笔记](./Launch_Notes.md)
