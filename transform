@@ -1,0 +1,40 @@
+Frame（坐标系）：空间中具有名称的参考点（原点）。比如机器人底盘 base_link、世界原点 world、摄像头 camera_link。它们之间通过父子关系构成一个“树状图”。
+TF（Transform）：描述两个 Frame 之间相对位置（平移）和姿态（旋转）的变换关系。
+广播器（Broadcaster）：负责将坐标变换关系发布到 /tf 话题上（比如告诉系统 world 和 turtle1 的相对位置）。
+监听器（Listener）：负责从 /tf 话题中查询两个 Frame 之间的相对关系。
+
+2. 核心工具与常用命令
+在终端中，我们可以直接使用 tf2 提供的命令行工具进行查看和调试：
+ros2 run tf2_tools view_frames	生成并下载 frames.pdf，可视化查看整个机器人的坐标系树状结构。
+ros2 run tf2_ros tf2_echo <父坐标系> <子坐标系>	在终端实时打印两个坐标系之间的平移(x,y,z)和旋转(四元数/RPY)。
+ros2 run rviz2 rviz2 -d <配置文件>	在 RViz2 中把 TF 树可视化，直观看到坐标轴的移动。
+
+3. 核心代码逻辑解析（小海龟跟随案例）
+一个完整的 TF 应用，通常由三个节点协作完成：
+ 广播器（Broadcaster）
+任务：把海龟的 x, y, theta 转成 TF 消息。
+
+关键代码：
+订阅海龟位姿：create_subscription(Pose, '/turtle1/pose', ...)
+设置父子坐标系：header.frame_id = 'world', child_frame_id = 'turtle1'
+四元数转换：TF 只认四元数，用 tf_transformations.quaternion_from_euler(0, 0, theta) 把角度转成四元数。
+发送：self.tf_broadcaster.sendTransform(transform)
+
+② 监听器（Listener）
+任务：查询海龟1和海龟2的相对位置。
+三件套：
+Buffer()：创建缓存区。
+transformListener(buffer, self)：监听 /tf 并存入缓存。
+lookup_transform(目标系, 源系, 时间)：查询变换。注意参数顺序，返回的是源系在目标系下的位姿。
+
+数据解析：
+trans.transform.translation：获取平移 x, y。
+tf_transformations.euler_from_quaternion(...)：把四元数转回欧拉角，方便看朝向。
+
+③ 跟随控制器（Launch文件组装）
+将上述节点通过 Launch 文件一键启动。
+用 math.atan2(y, x) 计算出转向的角速度（angular.z）。
+发布到 /turtle2/cmd_vel 控制海龟移动
+view_frames 查树：看 turtle1 和 turtle2 的 frame 有没有在树里。没有就是广播器没跑。
+tf2_echo 查数值：看数据有没有随着海龟移动而变化。数值卡死就是数据流断了。
+ros2 topic echo /turtle2/cmd_vel 查指令：看速度指令有没有发出来。如果没有，说明监听器算错了或者报错了。
