@@ -1,0 +1,52 @@
+机器人的四大件（建模前的构思）
+在写代码前，先要在脑子里把机器人拆解成四个部分：
+•	硬件结构：底盘、外壳、电机（看得见摸得着的）。
+•	驱动系统：电机驱动器、电源（让机器动起来的装置）。
+•	传感系统：编码器、IMU、摄像头、雷达（感知器官）。
+•	控制系统：树莓派、电脑（大脑）
+
+visual 是给人眼看的（长得好不好看）。
+collision 是给物理引擎（Gazebo）用的（物理世界里的边界在哪）
+为了电脑不卡死，我们用粗糙的绿色圆柱体（collision），去代替精美的蓝色模型（visual）做物理碰撞计算
+用在 <joint> 里面
+代表：子连杆怎么安装在父连杆上。
+<joint name="joint_2" type="revolute">
+  <parent link="link_1"/>
+  <child link="link_2"/>
+  <origin xyz="0.2 0.2 0" rpy="0 0 0"/> 
+</joint>
+翻译：我要把 link_2 装到 link_1 身上。装在哪个位置呢？以 link_1 的中心点为原点，往前（X轴）走 0.2 米，往左（Y轴）走 0.2 米。方向不变（rpy全是0）。
+
+用在 <link> 的 <visual> 或 <collision> 里面
+代表：这个形状相对于连杆自己的中心点，偏了多少。
+<link name="base_link">
+  <visual>
+    <origin xyz="0 0 0" rpy="1.5707 0 0"/>
+    <geometry><cylinder .../></geometry>
+  </visual>
+  
+<collision>
+    <origin xyz="0 0 -0.05" rpy="0 0 0"/>
+    <geometry><cylinder .../></geometry>
+  </collision>
+</link>
+翻译：origin偏移量
+o	蓝色的外观模型（visual），rpy 分别代表绕 X、Y、Z 三个轴旋转（Roll、Pitch、Yaw）。
+这里的 1.5707 0 0，意思是竖着的圆柱体绕x轴转90度。
+o	URDF 里的所有几何形状，出厂设置都是立正的
+o	绿色的碰撞模型（collision），相对于中心点，往下移了 5 厘米（xyz 里的 -0.05），为了让这个简单的圆柱体把蓝色模型包住。
+单位：xyz 默认是米（m）。
+旋转单位：rpy 默认是弧度（rad）
+
+
+URDF 的两大积木：Link 和 Joint
+再复杂的机器人，也是由这两样东西拼起来的。你可以把人手作为例子：
+•	Link（连杆）：刚体部分。比如大臂、小臂。它们自己是动不了的。
+•	Joint（关节）：连接部分。比如手肘，它连接大臂和小臂，提供旋转自由度
+
+把你用 XML 代码写的机器人模型（.urdf），变成一张直观的“家族关系树状图”（.pdf）:
+先找find . -name "mbot_base.urdf"文件然后进入文件夹（cd）再用工具urdf_to_graphviz mbot_base.urdf
+XACRO：URDF的升级版
+超能力一：定义变量（不用到处改数字）（<xacro:property>）
+超能力二：数学计算（告别心算 直接写公式）（${}）
+超能力三：宏定义（写一次，用一万次）（<xacro:macro>）
