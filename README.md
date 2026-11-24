@@ -18,3 +18,6 @@ ros2 run learning_topic topic_helloworld_pub
 - [TF2 坐标变换与跟随笔记](./TF2_Notes.md)
 - [Launch 多节点启动笔记](./Launch_Notes.md)
 - [TF2 广播器,监听器笔记](./transform.md)
+- [Gazebo 三维物理仿真与 XACRO 笔记](./Gazebo_XACRO_Notes.md)
+-  [Rviz 可视化与传感器仿真笔记](./Rviz_Sensors_Notes.md)
+-  [ROS2 常用调试指令速查表](./ROS2_Commands_CheatSheet.md)
