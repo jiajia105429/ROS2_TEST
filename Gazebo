@@ -1,0 +1,45 @@
+如果没有实物机器人，或者不想频繁让实体机做测试（比如无人机炸机、火星车），就可以在 Gazebo 里先做仿真。
+
+验证算法（测试代码逻辑对不对）。
+
+测试场景应用（比如在虚拟火星表面上跑一圈）。
+
+2. URDF 的升级版：XACRO
+直接写 URDF 太啰嗦了（比如四个轮子要复制粘贴四遍），所以要用 XACRO。
+它就像给 URDF 加上了“编程思维”：
+
+宏定义（macro）：像写函数一样，定义一次轮子，传个参数（左右镜像）就能生成两个轮子。
+
+常量计算：尺寸、质量用 ${} 计算，以后改参数只改一处。
+
+文件包含：把底盘、传感器拆成多个文件，用 <xacro:include> 拼起来。
+
+安装命令：sudo apt install ros-humble-xacro
+
+3. 模型进 Gazebo 的四步曲（重点排错思路）
+你以为把 URDF 丢进 Gazebo 就能跑吗？不行，物理引擎很挑剔，必须做四步配置：
+
+完善物理参数：每个 link 必须有惯性参数（mass 和 inertia）和碰撞属性，否则会报错或者飘在空中。
+
+添加 Gazebo 标签：URDF 的颜色格式和 Gazebo 不兼容，要在 <gazebo reference="link_name"> 里重新指定颜色（比如 <material>Gazebo/Blue</material>）。
+
+配置传动装置（transmission）：给需要动的关节（如轮子）绑定一个虚拟电机，让控制器能驱动它。
+
+添加控制器插件（plugin）：核心灵魂！ 比如加一个差速控制器插件（libgazebo_ros_diff_drive.so），这样你发 /cmd_vel 速度指令，它就会自动换算成左右轮子的转速。
+
+4. 怎么把模型加载到 Gazebo 里？
+需要用一个叫 spawn_entity 的节点。在 Launch 文件里写清楚把哪个话题（robot_description）里的模型，生成到哪个坐标点（x, y, z）。
+
+5. 常用实操命令
+bash
+# 安装 Gazebo 相关包
+sudo apt install ros-humble-gazebo-*
+
+# 启动空的 Gazebo 世界
+ros2 launch gazebo_ros gazebo.launch.py
+
+# 启动带机器人的 Gazebo（通过 Launch 文件）
+ros2 launch learning_gazebo load_urdf_into_gazebo.launch.py
+
+# 用键盘控制仿真机器人移动（i往前走）
+ros2 run teleop_twist_keyboard teleop_twist_keyboard

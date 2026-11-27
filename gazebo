@@ -1,0 +1,7 @@
+虚拟机跑 Gazebo 的坑：如果虚拟机里 Gazebo 黑屏或者卡死，需要关掉硬件加速。在 ~/.bashrc 里加一句 export SVGA_VGPU10=0。
+
+模型下载慢：Gazebo 启动时会去下载环境模型，国内很容易卡住。教程提到要提前把离线模型放到 ~/.gazebo/models 路径下。
+
+随着版本迭代，Gazebo 出了新一代叫 Ignition（现在改名也叫 Gazebo Sim 了），渲染更好，以后遇到再说。
+
+终于知道之前 TF 里的 base_footprint、odom 是怎么来的了，原来是通过 Gazebo 的差速控制器插件（diff_drive）发布出来的。

@@ -21,3 +21,4 @@ ros2 run learning_topic topic_helloworld_pub
 - [Gazebo 三维物理仿真与 XACRO 笔记](./Gazebo_XACRO_Notes.md)
 -  [Rviz 可视化与传感器仿真笔记](./Rviz_Sensors_Notes.md)
 -  [ROS2 常用调试指令速查表](./ROS2_Commands_CheatSheet.md)
+-  [Rviz 与 rqt 调试工具笔记](./Rviz_rqt_Debug_Notes.md)
